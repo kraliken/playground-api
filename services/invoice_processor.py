@@ -11,7 +11,55 @@ def process_multialarm(pdf_bytes: bytes):
             if page_text:
                 full_text += "\n" + page_text
 
-    return full_text
+    invoice_number = re.search(r"Számla száma:\s*(\d+)", full_text)
+    invoice_date = re.search(r"Számla kelte:\s*([\d\.]+)", full_text)
+    performance_date = re.search(r"Teljesítési dátum:\s*([\d\.]+)", full_text)
+    payment_due = re.search(r"Fizetési határidő:\s*([\d\.]+)", full_text)
+
+    header_info = {
+        "invoice_number": invoice_number.group(1) if invoice_number else "",
+        "invoice_date": invoice_date.group(1).rstrip(".") if invoice_date else "",
+        "payment_due": payment_due.group(1).rstrip(".") if payment_due else "",
+        "performance_date": performance_date.group(1).rstrip(".") if performance_date else "",
+    }
+
+    period_pattern = r"Időszak:\s*([\d\.]+ - [\d\.]+)"
+    license_plate_pattern = r"Felszerelési hely:\s+(\S+)"
+    line_pattern = r"Menetlevél \+ útdíj alapszolgáltatás[^\n]+"
+
+    lines = re.findall(line_pattern, full_text)
+    periods = re.findall(period_pattern, full_text)
+    license_plates = re.findall(license_plate_pattern, full_text)
+
+    min_len = min(len(periods), len(license_plates), len(lines))
+    if min_len < max(len(periods), len(license_plates), len(lines)):
+        print("Warning: not all data is present for each row! Only matching triples will be paired.")
+
+    data = []
+    for i in range(min_len):
+        line = lines[i]
+
+        amounts = re.findall(r"(\d{1,3}(?: \d{3})*,\d{2})Ft", line)
+        vat_percent = re.search(r"(\d{1,2})\s?%", line)
+
+        if len(amounts) >= 4 and vat_percent:
+            net = float(amounts[1].replace(" ", "").replace(",", "."))         
+            vat = int(vat_percent.group(1))
+            vat_amount = float(amounts[2].replace(" ", "").replace(",", ".")) 
+            period_start, period_end = [p.strip() for p in periods[i].split(" - ")]
+            license_plate = license_plates[i].replace(" ", "").replace("-", "")
+            row = {
+                **header_info, 
+                "period_start": period_start,
+                "period_end": period_end,
+                "license_plate": license_plate,
+                "net": net,
+                "vat_percent": vat,
+                "vat_amount": vat_amount
+            }
+            data.append(row)
+
+    return data
 
 def process_volvo(pdf_bytes: bytes):
 

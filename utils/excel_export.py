@@ -23,3 +23,20 @@ def export_volvo_to_excel_bytes(data):
     output.seek(0)
 
     return output
+
+def export_multialarm_to_excel_bytes(data):
+    if not data:
+        return None
+    
+    df = pd.DataFrame(data)
+    for col in ["period_start", "period_end", "invoice_date", "payment_due", "performance_date"]:
+        try:
+            df[col] = pd.to_datetime(df[col], format="%Y.%m.%d")
+        except Exception:
+            df[col] = df[col]
+    
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return output
