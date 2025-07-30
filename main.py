@@ -2,17 +2,19 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-from fastapi import FastAPI
-from routers import upload
-from routers import invoices
-from routers import partner
-from routers import partners
-from routers import email
-from routers import emails
-from routers import connection
-from database.connection import create_db_and_tables
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+# from routers import invoices
+# from routers import partner
+# from routers import partners
+# from routers import email
+# from routers import emails
+# from routers import connection
+from database.connection import create_db_and_tables
+from routers import upload
 
 
 @asynccontextmanager
@@ -39,9 +41,9 @@ app.add_middleware(
 )
 
 app.include_router(upload.router, prefix="/api/v1")
-app.include_router(invoices.router, prefix="/api/v1")
-app.include_router(partner.router, prefix="/api/v1")
-app.include_router(partners.router, prefix="/api/v1")
-app.include_router(email.router, prefix="/api/v1")
-app.include_router(emails.router, prefix="/api/v1")
-app.include_router(connection.router, prefix="/api/v1")
+# app.include_router(invoices.router, prefix="/api/v1")
+# app.include_router(partner.router, prefix="/api/v1")
+# app.include_router(partners.router, prefix="/api/v1")
+# app.include_router(email.router, prefix="/api/v1")
+# app.include_router(emails.router, prefix="/api/v1")
+# app.include_router(connection.router, prefix="/api/v1")
